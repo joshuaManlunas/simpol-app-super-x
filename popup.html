@@ -1,62 +1,135 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Super-X XPath Query Generator</title>
     <style>
-      body {
-        width: 300px;
-        padding: 15px;
-        font-family: Arial, sans-serif;
+      :root {
+        --blue-primary: #4285f4;
+        --blue-dark: #3367d6;
+        --bg-light: #f7f7f7;
+        --text-dark: #333;
+        --border-light: #ddd;
       }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        width: 320px;
+        padding: 16px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        background-color: var(--bg-light);
+        color: var(--text-dark);
+        line-height: 1.5;
+      }
+
+      header {
+        margin-bottom: 12px;
+        border-bottom: 1px solid var(--border-light);
+        padding-bottom: 8px;
+      }
+
       h1 {
         font-size: 18px;
-        margin-top: 0;
+        margin-bottom: 4px;
+        color: var(--blue-primary);
       }
+
       p {
         font-size: 14px;
-        line-height: 1.4;
+        margin-bottom: 12px;
       }
+
       .key {
         display: inline-block;
-        background-color: #f0f0f0;
-        border: 1px solid #ccc;
+        background-color: #fff;
+        border: 1px solid var(--border-light);
         border-radius: 3px;
-        padding: 2px 6px;
-        font-family: "Courier New", monospace;
+        padding: 1px 6px;
+        font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo,
+          monospace;
+        font-size: 12px;
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+      }
+
+      .feature-list {
+        margin-bottom: 16px;
+        padding-left: 20px;
+      }
+
+      .feature-list li {
+        font-size: 13px;
+        margin-bottom: 4px;
       }
 
       .action-button {
-        background-color: #4285f4;
+        background-color: var(--blue-primary);
         color: white;
         border: none;
-        padding: 8px 12px;
+        padding: 10px 16px;
         border-radius: 4px;
         cursor: pointer;
         font-size: 14px;
         width: 100%;
-        margin-top: 10px;
+        margin-top: 8px;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
       }
 
       .action-button:hover {
-        background-color: #3367d6;
+        background-color: var(--blue-dark);
+      }
+
+      .action-button:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.4);
+      }
+
+      footer {
+        margin-top: 16px;
+        font-size: 11px;
+        color: #666;
+        text-align: center;
       }
     </style>
   </head>
   <body>
-    <h1>Super-X XPath Query Generator</h1>
-    <p>
-      Hold the <span class="key">Shift</span> key and hover over elements to see
-      their XPath queries.
-    </p>
-    <p>
-      The overlay panel will show both a full XPath and an optimized version
-      when available.
-    </p>
-    <p>Click the "Copy" button to copy the XPath to your clipboard.</p>
-    <hr />
-    <button id="openQueryPanel" class="action-button">
-      Open XPath Query Panel
-    </button>
+    <header>
+      <h1>Super-X XPath Query Generator</h1>
+    </header>
+
+    <main>
+      <p>
+        Hold the <span class="key">Shift</span> key and hover over elements to
+        see their XPath queries.
+      </p>
+
+      <p>Available features:</p>
+      <ul class="feature-list">
+        <li>View both full and optimized XPath queries</li>
+        <li>Copy XPath with keyboard shortcuts</li>
+        <li>Test custom XPath expressions</li>
+        <li>Highlight matching elements in real-time</li>
+      </ul>
+
+      <button id="openQueryPanel" class="action-button">
+        Open XPath Query Panel
+      </button>
+    </main>
+
+    <footer>
+      <p>
+        Version 1.0.1 •
+        <a href="https://github.com/user/super-x" target="_blank">GitHub</a>
+      </p>
+    </footer>
+
     <script src="popup.js"></script>
   </body>
 </html>

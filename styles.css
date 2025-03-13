@@ -1,22 +1,45 @@
+:root {
+  --bg-dark: #2d2d2d;
+  --bg-header: #4a4a4a;
+  --text-light: #f8f8f8;
+  --border-color: #666;
+  --highlight-orange: #ff5722;
+  --highlight-blue: #4285f4;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --animation-speed: 0.2s;
+  --font-mono: "Courier New", monospace;
+  --panel-radius: 6px;
+  --hover-color: #555;
+}
+
+/* Overlay Panel */
 .xpath-overlay-panel {
   position: absolute;
   z-index: 9999;
-  background-color: #2d2d2d;
-  color: #f8f8f8;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  font-family: "Courier New", monospace;
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+  border-radius: var(--panel-radius);
+  box-shadow: 0 4px 12px var(--shadow-color);
+  font-family: var(--font-mono);
   min-width: 300px;
   max-width: 600px;
   overflow: hidden;
-  transition: opacity 0.2s ease;
+  opacity: 0;
+  transform: translateY(-5px);
+  transition: opacity var(--animation-speed) ease,
+    transform var(--animation-speed) ease;
+}
+
+.xpath-overlay-panel[style*="display: block"] {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .xpath-overlay-header {
-  background-color: #4a4a4a;
+  background-color: var(--bg-header);
   padding: 8px 12px;
   font-weight: bold;
-  border-bottom: 1px solid #666;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .xpath-overlay-content {
@@ -37,22 +60,28 @@
   display: block;
   width: 100%;
   padding: 8px;
-  background-color: #4a4a4a;
-  color: #f8f8f8;
+  background-color: var(--bg-header);
+  color: var(--text-light);
   border: none;
   cursor: pointer;
   font-family: inherit;
-  transition: background-color 0.2s ease;
+  transition: background-color var(--animation-speed) ease;
 }
 
 .xpath-copy-button:hover {
-  background-color: #666;
+  background-color: var(--hover-color);
+}
+
+.xpath-copy-button:focus {
+  outline: 2px solid var(--highlight-blue);
+  outline-offset: -2px;
 }
 
 .xpath-highlight {
-  outline: 2px solid #ff5722 !important;
+  outline: 2px solid var(--highlight-orange) !important;
   outline-offset: 2px !important;
   background-color: rgba(255, 87, 34, 0.1) !important;
+  transition: outline-color 0.15s ease !important;
 }
 
 /* Fixed Query Panel Styles */
@@ -61,11 +90,11 @@
   top: 20px;
   right: 20px;
   z-index: 10000;
-  background-color: #2d2d2d;
-  color: #f8f8f8;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  font-family: "Courier New", monospace;
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+  border-radius: var(--panel-radius);
+  box-shadow: 0 4px 12px var(--shadow-color);
+  font-family: var(--font-mono);
   width: 350px;
   min-width: 250px;
   min-height: 100px;
@@ -73,13 +102,21 @@
   resize: both;
   max-width: 800px;
   max-height: 600px;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.xpath-query-panel[style*="display: block"] {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .xpath-panel-header {
-  background-color: #4a4a4a;
+  background-color: var(--bg-header);
   padding: 8px 12px;
   font-weight: bold;
-  border-bottom: 1px solid #666;
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -88,18 +125,27 @@
 .xpath-panel-close {
   background: none;
   border: none;
-  color: #f8f8f8;
+  color: var(--text-light);
   font-size: 20px;
   cursor: pointer;
   padding: 0 5px;
+  transition: color var(--animation-speed) ease;
 }
 
 .xpath-panel-close:hover {
-  color: #ff5722;
+  color: var(--highlight-orange);
+}
+
+.xpath-panel-close:focus {
+  outline: 2px solid var(--highlight-blue);
+  border-radius: 4px;
 }
 
 .xpath-panel-content {
   padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .xpath-input-container {
@@ -111,10 +157,18 @@
   padding: 8px;
   background-color: #ffffff;
   color: #000000;
-  border: 1px solid #666;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
-  font-family: "Courier New", monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
+  transition: border-color var(--animation-speed) ease,
+    box-shadow var(--animation-speed) ease;
+}
+
+.xpath-query-input:focus {
+  outline: none;
+  border-color: var(--highlight-blue);
+  box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
 }
 
 .xpath-result-count {
@@ -124,16 +178,29 @@
 }
 
 .xpath-error {
-  color: #ff5722;
+  color: var(--highlight-orange);
 }
 
 .xpath-query-match {
-  outline: 2px solid #4285f4 !important;
+  outline: 2px solid var(--highlight-blue) !important;
   outline-offset: 2px !important;
   background-color: rgba(66, 133, 244, 0.2) !important;
+  animation: xpath-pulse 2s infinite !important;
 }
 
-/* Add a resize handle indicator */
+@keyframes xpath-pulse {
+  0% {
+    outline-offset: 2px;
+  }
+  50% {
+    outline-offset: 4px;
+  }
+  100% {
+    outline-offset: 2px;
+  }
+}
+
+/* Resize handle indicator */
 .xpath-resize-handle {
   position: absolute;
   bottom: 0;
@@ -141,9 +208,85 @@
   width: 15px;
   height: 15px;
   cursor: nwse-resize;
-  background: linear-gradient(135deg, transparent 50%, #666 50%, #666 60%, transparent 60%);
+  background: linear-gradient(
+    135deg,
+    transparent 50%,
+    var(--border-color) 50%,
+    var(--border-color) 60%,
+    transparent 60%
+  );
   background-size: 10px 10px;
   background-repeat: no-repeat;
   background-position: right bottom;
 }
 
+/* Shortcut info styles */
+.xpath-shortcut-info {
+  padding: 8px;
+  background-color: var(--bg-dark);
+  font-size: 11px;
+  color: #aaa;
+  text-align: center;
+  border-top: 1px solid var(--border-color);
+}
+
+.xpath-shortcut-info kbd {
+  background-color: var(--bg-header);
+  border-radius: 3px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+  color: var(--text-light);
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  margin: 0 0.2em;
+  padding: 0.1em 0.5em;
+  white-space: nowrap;
+}
+
+/* Copy notification */
+.xpath-copy-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+  padding: 10px 15px;
+  border-radius: var(--panel-radius);
+  box-shadow: 0 4px 12px var(--shadow-color);
+  z-index: 10001;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  max-width: 300px;
+}
+
+.xpath-copy-notification.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.xpath-preview {
+  margin-top: 5px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  word-break: break-all;
+  color: #aaa;
+}
+
+/* Make sure we have good focus indicators for accessibility */
+button:focus,
+input:focus {
+  outline: 2px solid var(--highlight-blue);
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .xpath-overlay-panel,
+  .xpath-query-panel,
+  .xpath-copy-notification {
+    display: none !important;
+  }
+}

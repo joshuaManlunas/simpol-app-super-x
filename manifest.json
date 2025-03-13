@@ -1,14 +1,16 @@
 {
   "manifest_version": 3,
   "name": "Super-X XPath Query Generator",
-  "version": "1.0",
-  "description": "Generates and displays XPath queries for elements under the cursor when pressing Shift",
-  "permissions": ["activeTab", "scripting"],
+  "version": "1.0.1",
+  "description": "Generate and test XPath queries for web elements with hover highlighting and real-time evaluation",
+  "permissions": ["activeTab"],
+  "host_permissions": ["<all_urls>"],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
       "js": ["content.js"],
-      "css": ["styles.css"]
+      "css": ["styles.css"],
+      "run_at": "document_end"
     }
   ],
   "action": {
@@ -23,5 +25,14 @@
     "16": "images/icon16.png",
     "48": "images/icon48.png",
     "128": "images/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["images/*"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
   }
 }
