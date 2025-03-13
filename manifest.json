@@ -1,5 +1,7 @@
 {
   "manifest_version": 3,
+  "author": "Joshua Manlunas",
+  "homepage_url": "https://github.com/joshuaManlunas/simpol-app-super-x",
   "name": "Super-X XPath Query Generator",
   "version": "1.0.1",
   "description": "Generate and test XPath queries for web elements with hover highlighting and real-time evaluation",
