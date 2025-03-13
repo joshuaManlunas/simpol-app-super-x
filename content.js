@@ -1,16 +1,42 @@
-// State variables
-let isShiftPressed = false;
-let overlayPanel = null;
-let highlightedElement = null;
-let lastHighlightedElement = null;
-let queryPanel = null;
-let highlightedElements = [];
-let queryResultCount = 0;
-let currentXPath = "";
-let currentOptimizedXPath = "";
-let copyFeedbackTimeout = null;
+/**
+ * Super-X XPath Query Generator
+ * A Chrome extension for generating and testing XPath queries for web elements.
+ * Written by: @joshuaManlunas
+ * Version: 1.0.0
+ * Date: 2025-03-13
+ */
 
-// Create overlay panel
+// Types
+/**
+ * @typedef {Object} State
+ * @property {boolean} isShiftPressed - Whether the shift key is currently pressed
+ * @property {HTMLElement|null} highlightedElement - The currently highlighted element under cursor
+ * @property {HTMLElement|null} lastHighlightedElement - The previously highlighted element
+ * @property {string} currentXPath - The current full XPath
+ * @property {string} currentOptimizedXPath - The current optimized XPath
+ * @property {number} queryResultCount - Number of elements matching the current query
+ * @property {HTMLElement[]} highlightedElements - Elements highlighted by manual XPath query
+ * @property {number|null} copyFeedbackTimeout - Timeout ID for copy feedback message
+ */
+
+// State management
+const state = {
+  isShiftPressed: false,
+  highlightedElement: null,
+  lastHighlightedElement: null,
+  overlayPanel: null,
+  queryPanel: null,
+  highlightedElements: [],
+  queryResultCount: 0,
+  currentXPath: "",
+  currentOptimizedXPath: "",
+  copyFeedbackTimeout: null,
+};
+
+/**
+ * Creates the overlay panel for displaying XPath information
+ * @returns {HTMLElement} The created overlay panel
+ */
 function createOverlayPanel() {
   const panel = document.createElement("div");
   panel.id = "xpath-overlay-panel";
@@ -34,7 +60,8 @@ function createOverlayPanel() {
   copyButton.id = "xpath-copy-button";
   copyButton.classList.add("xpath-copy-button");
   copyButton.addEventListener("click", () => {
-    const xpathText = document.getElementById("xpath-display").textContent;
+    const xpathText =
+      document.getElementById("xpath-display")?.textContent || "";
     copyToClipboard(xpathText, copyButton);
   });
 
@@ -52,37 +79,38 @@ function createOverlayPanel() {
   return panel;
 }
 
-// Copy text to clipboard with feedback
+/**
+ * Copies text to clipboard and shows feedback
+ * @param {string} text - Text to copy
+ * @param {HTMLElement|null} feedbackElement - Element to show feedback on
+ */
 function copyToClipboard(text, feedbackElement = null) {
   // Extract just the XPath from the text if it contains labels
   let xpathToCopy = text;
-  if (text.includes("Full XPath:")) {
-    const matches = text.match(/Full XPath:\s*([^\n]+)/);
-    if (matches && matches[1]) {
-      xpathToCopy = matches[1].trim();
-    }
-  } else if (text.includes("Optimized XPath:")) {
-    const matches = text.match(/Optimized XPath:\s*([^\n]+)/);
-    if (matches && matches[1]) {
-      xpathToCopy = matches[1].trim();
-    }
+  const fullXPathMatch = text.match(/Full XPath:\s*([^\n]+)/);
+  const optimizedXPathMatch = text.match(/Optimized XPath:\s*([^\n]+)/);
+
+  if (fullXPathMatch && fullXPathMatch[1]) {
+    xpathToCopy = fullXPathMatch[1].trim();
+  } else if (optimizedXPathMatch && optimizedXPathMatch[1]) {
+    xpathToCopy = optimizedXPathMatch[1].trim();
   }
 
   navigator.clipboard
     .writeText(xpathToCopy)
     .then(() => {
       if (feedbackElement) {
-        const originalText = feedbackElement.textContent;
+        const originalText = feedbackElement.textContent || "";
         feedbackElement.textContent = "Copied!";
 
         // Clear any existing timeout
-        if (copyFeedbackTimeout) {
-          clearTimeout(copyFeedbackTimeout);
+        if (state.copyFeedbackTimeout) {
+          clearTimeout(state.copyFeedbackTimeout);
         }
 
-        copyFeedbackTimeout = setTimeout(() => {
+        state.copyFeedbackTimeout = setTimeout(() => {
           feedbackElement.textContent = originalText;
-          copyFeedbackTimeout = null;
+          state.copyFeedbackTimeout = null;
         }, 1500);
       }
 
@@ -92,22 +120,25 @@ function copyToClipboard(text, feedbackElement = null) {
     .catch((err) => {
       console.error("Failed to copy: ", err);
       if (feedbackElement) {
-        const originalText = feedbackElement.textContent;
+        const originalText = feedbackElement.textContent || "";
         feedbackElement.textContent = "Copy failed!";
 
-        if (copyFeedbackTimeout) {
-          clearTimeout(copyFeedbackTimeout);
+        if (state.copyFeedbackTimeout) {
+          clearTimeout(state.copyFeedbackTimeout);
         }
 
-        copyFeedbackTimeout = setTimeout(() => {
+        state.copyFeedbackTimeout = setTimeout(() => {
           feedbackElement.textContent = originalText;
-          copyFeedbackTimeout = null;
+          state.copyFeedbackTimeout = null;
         }, 1500);
       }
     });
 }
 
-// Show a floating notification when XPath is copied
+/**
+ * Shows a floating notification when XPath is copied
+ * @param {string} xpath - The copied XPath
+ */
 function showCopyNotification(xpath) {
   const notification = document.createElement("div");
   notification.classList.add("xpath-copy-notification");
@@ -126,20 +157,24 @@ function showCopyNotification(xpath) {
   document.body.appendChild(notification);
 
   // Animate in
-  setTimeout(() => {
+  requestAnimationFrame(() => {
     notification.classList.add("show");
-  }, 10);
+  });
 
   // Remove after delay
   setTimeout(() => {
     notification.classList.remove("show");
     setTimeout(() => {
-      document.body.removeChild(notification);
+      notification.parentNode?.removeChild(notification);
     }, 300); // Wait for fade out animation
   }, 2000);
 }
 
-// Generate XPath for an element
+/**
+ * Generates a full XPath for an element
+ * @param {Element|null} element - Element to generate XPath for
+ * @returns {string} The XPath
+ */
 function getXPath(element) {
   if (!element) return "";
 
@@ -190,7 +225,11 @@ function getXPath(element) {
   return "/" + paths.join("/");
 }
 
-// Generate a more concise XPath using attributes when available
+/**
+ * Generates a more concise XPath using attributes when available
+ * @param {Element|null} element - Element to generate optimized XPath for
+ * @returns {string} The optimized XPath
+ */
 function getOptimizedXPath(element) {
   if (!element) return "";
 
@@ -199,9 +238,17 @@ function getOptimizedXPath(element) {
     return `//*[@id="${element.id}"]`;
   }
 
-  // If element has a unique class, use it
+  // Define classes added by the extension that should be ignored
+  const extensionClasses = ["xpath-highlight", "xpath-query-match"];
+
+  // If element has a unique class, use it (excluding extension-added classes)
   if (element.className && typeof element.className === "string") {
-    const classes = element.className.split(/\s+/).filter((c) => c);
+    const classes = element.className
+      .split(/\s+/)
+      .filter(Boolean)
+      .filter((className) => !extensionClasses.includes(className));
+
+    // Try each individual class that is not from our extension
     for (const className of classes) {
       const sameClassElements = document.getElementsByClassName(className);
       if (sameClassElements.length === 1) {
@@ -210,35 +257,81 @@ function getOptimizedXPath(element) {
     }
   }
 
-  // If element has a name attribute, use it
-  if (element.name) {
-    const sameNameElements = document.getElementsByName(element.name);
-    if (sameNameElements.length === 1) {
-      return `//*[@name="${element.name}"]`;
+  // Try with combined classes if there are multiple (excluding extension-added classes)
+  if (element.className && typeof element.className === "string") {
+    // Remove extension classes before creating the combined class query
+    const filteredClassNames = element.className
+      .split(/\s+/)
+      .filter(Boolean)
+      .filter((className) => !extensionClasses.includes(className))
+      .join(" ");
+
+    if (filteredClassNames) {
+      const sameClassElements = document.querySelectorAll(
+        `.${CSS.escape(filteredClassNames)}`
+      );
+      if (sameClassElements.length === 1) {
+        return `//*[@class="${filteredClassNames}"]`;
+      }
     }
   }
 
-  // If element has a unique text content, use it
-  if (element.textContent && element.textContent.trim()) {
-    const text = element.textContent.trim();
-    if (text.length < 50) {
-      // Only use text if it's reasonably short
-      const xpathResult = document.evaluate(
-        `//${element.nodeName.toLowerCase()}[contains(text(), "${text.replace(
-          /"/g,
-          '\\"'
-        )}")]`,
-        document,
-        null,
-        XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
-        null
-      );
+  // If element has a name attribute, use it
+  if (element.hasAttribute("name")) {
+    const name = element.getAttribute("name");
+    const sameNameElements = document.getElementsByName(name || "");
+    if (sameNameElements.length === 1) {
+      return `//*[@name="${name}"]`;
+    }
+  }
 
-      if (xpathResult.snapshotLength === 1) {
-        return `//${element.nodeName.toLowerCase()}[contains(text(), "${text.replace(
-          /"/g,
-          '\\"'
-        )}")]`;
+  // If element has a unique text content, try to use it
+  if (element.textContent) {
+    const text = element.textContent.trim();
+    if (text.length > 0 && text.length < 50) {
+      // Only use text if it's reasonably short
+      try {
+        const escapedText = text.replace(/"/g, '\\"');
+        const xpathQuery = `//${element.nodeName.toLowerCase()}[contains(text(), "${escapedText}")]`;
+        const xpathResult = document.evaluate(
+          xpathQuery,
+          document,
+          null,
+          XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+          null
+        );
+
+        if (xpathResult.snapshotLength === 1) {
+          return xpathQuery;
+        }
+      } catch (e) {
+        // If there's an error in the XPath evaluation, fall back to full path
+        console.debug("Error generating optimized XPath:", e);
+      }
+    }
+  }
+
+  // If element has a unique attribute combination, try using that
+  const uniqueAttributes = ["type", "role", "aria-label", "data-testid"];
+  for (const attr of uniqueAttributes) {
+    if (element.hasAttribute(attr)) {
+      const value = element.getAttribute(attr);
+      try {
+        const query = `//${element.nodeName.toLowerCase()}[@${attr}="${value}"]`;
+        const result = document.evaluate(
+          query,
+          document,
+          null,
+          XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+          null
+        );
+
+        if (result.snapshotLength === 1) {
+          return query;
+        }
+      } catch (e) {
+        // Skip this attribute if there's an error
+        console.debug(`Error with attribute ${attr}:`, e);
       }
     }
   }
@@ -247,29 +340,34 @@ function getOptimizedXPath(element) {
   return getXPath(element);
 }
 
-// Update the overlay panel with XPath information
+/**
+ * Updates the overlay panel with XPath information
+ * @param {Element|null} element - Element to show XPath for
+ */
 function updateOverlayPanel(element) {
-  if (!overlayPanel) {
-    overlayPanel = createOverlayPanel();
+  if (!state.overlayPanel) {
+    state.overlayPanel = createOverlayPanel();
   }
 
   if (!element) {
-    overlayPanel.style.display = "none";
-    currentXPath = "";
-    currentOptimizedXPath = "";
+    state.overlayPanel.style.display = "none";
+    state.currentXPath = "";
+    state.currentOptimizedXPath = "";
     return;
   }
 
   const xpathDisplay = document.getElementById("xpath-display");
-  currentXPath = getXPath(element);
-  currentOptimizedXPath = getOptimizedXPath(element);
+  if (!xpathDisplay) return;
 
-  xpathDisplay.textContent = `Full XPath:\n${currentXPath}\n\nOptimized XPath:\n${currentOptimizedXPath}`;
+  state.currentXPath = getXPath(element);
+  state.currentOptimizedXPath = getOptimizedXPath(element);
+
+  xpathDisplay.textContent = `Full XPath:\n${state.currentXPath}\n\nOptimized XPath:\n${state.currentOptimizedXPath}`;
 
   // Position the panel near the element but ensure it's visible
   const rect = element.getBoundingClientRect();
-  const panelHeight = overlayPanel.offsetHeight;
-  const panelWidth = overlayPanel.offsetWidth;
+  const panelHeight = state.overlayPanel.offsetHeight;
+  const panelWidth = state.overlayPanel.offsetWidth;
 
   let top = rect.bottom + window.scrollY + 10;
   let left = rect.left + window.scrollX;
@@ -283,16 +381,19 @@ function updateOverlayPanel(element) {
     left = window.innerWidth + window.scrollX - panelWidth - 10;
   }
 
-  overlayPanel.style.top = `${top}px`;
-  overlayPanel.style.left = `${left}px`;
-  overlayPanel.style.display = "block";
+  state.overlayPanel.style.top = `${top}px`;
+  state.overlayPanel.style.left = `${left}px`;
+  state.overlayPanel.style.display = "block";
 }
 
-// Create fixed query panel for manual XPath entry
+/**
+ * Creates fixed query panel for manual XPath entry
+ * @returns {HTMLElement} The created query panel
+ */
 function createQueryPanel() {
-  if (queryPanel) {
-    queryPanel.style.display = "block";
-    return queryPanel;
+  if (state.queryPanel) {
+    state.queryPanel.style.display = "block";
+    return state.queryPanel;
   }
 
   const panel = document.createElement("div");
@@ -308,6 +409,7 @@ function createQueryPanel() {
 
   const closeButton = document.createElement("button");
   closeButton.textContent = "×";
+  closeButton.setAttribute("aria-label", "Close panel");
   closeButton.classList.add("xpath-panel-close");
   closeButton.addEventListener("click", () => {
     panel.style.display = "none";
@@ -326,7 +428,7 @@ function createQueryPanel() {
   input.id = "xpath-query-input";
   input.classList.add("xpath-query-input");
   input.placeholder = "Enter XPath query...";
-  input.addEventListener("input", handleXPathInput);
+  input.addEventListener("input", debounce(handleXPathInput, 300)); // Debounce for better performance
   inputContainer.appendChild(input);
 
   const resultCount = document.createElement("div");
@@ -352,7 +454,29 @@ function createQueryPanel() {
   return panel;
 }
 
-// Make an element draggable
+/**
+ * Debounce function to limit how often a function is called
+ * @param {Function} func - Function to debounce
+ * @param {number} wait - Time to wait in ms
+ * @returns {Function} Debounced function
+ */
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+/**
+ * Makes an element draggable
+ * @param {HTMLElement} element - Element to make draggable
+ * @param {HTMLElement} handle - Handle element for dragging
+ */
 function makeDraggable(element, handle) {
   let pos1 = 0,
     pos2 = 0,
@@ -379,9 +503,17 @@ function makeDraggable(element, handle) {
     pos2 = pos4 - e.clientY;
     pos3 = e.clientX;
     pos4 = e.clientY;
-    // Set the element's new position
-    element.style.top = element.offsetTop - pos2 + "px";
-    element.style.left = element.offsetLeft - pos1 + "px";
+
+    // Set the element's new position, making sure it stays on screen
+    const newTop = Math.max(0, element.offsetTop - pos2);
+    const newLeft = Math.max(0, element.offsetLeft - pos1);
+
+    // Prevent moving too far right or bottom
+    const maxLeft = window.innerWidth - element.offsetWidth;
+    const maxTop = window.innerHeight - element.offsetHeight / 2;
+
+    element.style.top = Math.min(newTop, maxTop) + "px";
+    element.style.left = Math.min(newLeft, maxLeft) + "px";
   }
 
   function closeDragElement() {
@@ -391,8 +523,13 @@ function makeDraggable(element, handle) {
   }
 }
 
-// Handle XPath input changes
+/**
+ * Handles XPath input changes
+ * @param {Event} event - Input event
+ */
 function handleXPathInput(event) {
+  if (!event.target) return;
+
   const query = event.target.value.trim();
   if (!query) {
     clearHighlightedElements();
@@ -404,11 +541,18 @@ function handleXPathInput(event) {
     evaluateXPath(query);
   } catch (error) {
     clearHighlightedElements();
-    updateResultCount(0, true, error.message);
+    updateResultCount(
+      0,
+      true,
+      error instanceof Error ? error.message : String(error)
+    );
   }
 }
 
-// Evaluate XPath and highlight matching elements
+/**
+ * Evaluates XPath and highlights matching elements
+ * @param {string} query - XPath query
+ */
 function evaluateXPath(query) {
   clearHighlightedElements();
 
@@ -424,26 +568,51 @@ function evaluateXPath(query) {
     const matchCount = result.snapshotLength;
     updateResultCount(matchCount);
 
-    for (let i = 0; i < matchCount; i++) {
+    // Don't highlight too many elements to maintain performance
+    const maxHighlight = 100;
+    const limitedCount = Math.min(matchCount, maxHighlight);
+
+    for (let i = 0; i < limitedCount; i++) {
       const element = result.snapshotItem(i);
       if (element && element.nodeType === Node.ELEMENT_NODE) {
         element.classList.add("xpath-query-match");
-        highlightedElements.push(element);
+        state.highlightedElements.push(element);
       }
     }
+
+    if (matchCount > maxHighlight) {
+      updateResultCount(
+        matchCount,
+        false,
+        `Showing first ${maxHighlight} of ${matchCount} matches`
+      );
+    }
   } catch (error) {
-    updateResultCount(0, true, error.message);
+    updateResultCount(
+      0,
+      true,
+      error instanceof Error ? error.message : String(error)
+    );
   }
 }
 
-// Update the result count display
+/**
+ * Updates the result count display
+ * @param {number} count - Match count
+ * @param {boolean} isError - Whether there's an error
+ * @param {string} errorMessage - Error message
+ */
 function updateResultCount(count, isError = false, errorMessage = "") {
-  queryResultCount = count;
+  state.queryResultCount = count;
   const resultCountElement = document.getElementById("xpath-result-count");
+  if (!resultCountElement) return;
 
   if (isError) {
     resultCountElement.textContent = `Error: ${errorMessage}`;
     resultCountElement.classList.add("xpath-error");
+  } else if (errorMessage) {
+    resultCountElement.textContent = errorMessage;
+    resultCountElement.classList.remove("xpath-error");
   } else {
     resultCountElement.textContent =
       count === 0 ? "No matches" : count === 1 ? "1 match" : `${count} matches`;
@@ -451,20 +620,24 @@ function updateResultCount(count, isError = false, errorMessage = "") {
   }
 }
 
-// Clear all highlighted elements
+/**
+ * Clears all highlighted elements
+ */
 function clearHighlightedElements() {
-  highlightedElements.forEach((element) => {
+  state.highlightedElements.forEach((element) => {
     element.classList.remove("xpath-query-match");
   });
-  highlightedElements = [];
+  state.highlightedElements = [];
 }
 
-// Open the query panel
+/**
+ * Opens the query panel
+ */
 function openQueryPanel() {
-  if (!queryPanel) {
-    queryPanel = createQueryPanel();
+  if (!state.queryPanel) {
+    state.queryPanel = createQueryPanel();
   } else {
-    queryPanel.style.display = "block";
+    state.queryPanel.style.display = "block";
   }
 
   // Focus the input field
@@ -476,27 +649,33 @@ function openQueryPanel() {
   }, 100);
 }
 
-// Highlight the element under cursor
+/**
+ * Highlights the element under cursor
+ * @param {Element|null} element - Element to highlight
+ */
 function highlightElement(element) {
-  if (lastHighlightedElement) {
-    lastHighlightedElement.classList.remove("xpath-highlight");
+  if (state.lastHighlightedElement) {
+    state.lastHighlightedElement.classList.remove("xpath-highlight");
   }
 
   if (element) {
     element.classList.add("xpath-highlight");
-    lastHighlightedElement = element;
+    state.lastHighlightedElement = element;
   }
 }
 
-// Mouse move handler
+/**
+ * Mouse move handler
+ * @param {MouseEvent} event - Mouse event
+ */
 function handleMouseMove(event) {
-  if (!isShiftPressed) {
-    if (overlayPanel) {
-      overlayPanel.style.display = "none";
+  if (!state.isShiftPressed) {
+    if (state.overlayPanel) {
+      state.overlayPanel.style.display = "none";
     }
-    if (lastHighlightedElement) {
-      lastHighlightedElement.classList.remove("xpath-highlight");
-      lastHighlightedElement = null;
+    if (state.lastHighlightedElement) {
+      state.lastHighlightedElement.classList.remove("xpath-highlight");
+      state.lastHighlightedElement = null;
     }
     return;
   }
@@ -508,48 +687,58 @@ function handleMouseMove(event) {
     !element.closest("#xpath-overlay-panel") &&
     !element.closest(".xpath-copy-notification")
   ) {
-    highlightedElement = element;
+    state.highlightedElement = element;
     highlightElement(element);
     updateOverlayPanel(element);
   }
 }
 
-// Key event handlers
+/**
+ * Key down event handler
+ * @param {KeyboardEvent} event - Keyboard event
+ */
 function handleKeyDown(event) {
   if (event.key === "Shift") {
-    isShiftPressed = true;
+    state.isShiftPressed = true;
   }
 
   // Handle keyboard shortcuts when shift is pressed
-  if (isShiftPressed && highlightedElement) {
+  if (state.isShiftPressed && state.highlightedElement) {
     if (event.key === "l" || event.key === "L") {
       // Copy full XPath
-      copyToClipboard(currentXPath);
+      copyToClipboard(state.currentXPath);
       event.preventDefault();
     } else if (event.key === "o" || event.key === "O") {
       // Copy optimized XPath
-      copyToClipboard(currentOptimizedXPath);
+      copyToClipboard(state.currentOptimizedXPath);
       event.preventDefault();
     }
   }
 }
 
+/**
+ * Key up event handler
+ * @param {KeyboardEvent} event - Keyboard event
+ */
 function handleKeyUp(event) {
   if (event.key === "Shift") {
-    isShiftPressed = false;
-    if (overlayPanel) {
-      overlayPanel.style.display = "none";
+    state.isShiftPressed = false;
+    if (state.overlayPanel) {
+      state.overlayPanel.style.display = "none";
     }
-    if (lastHighlightedElement) {
-      lastHighlightedElement.classList.remove("xpath-highlight");
-      lastHighlightedElement = null;
+    if (state.lastHighlightedElement) {
+      state.lastHighlightedElement.classList.remove("xpath-highlight");
+      state.lastHighlightedElement = null;
     }
   }
 }
 
-// Initialize the extension
+/**
+ * Initialize the extension
+ */
 function init() {
-  document.addEventListener("mousemove", handleMouseMove);
+  // Use passive event listeners for better performance
+  document.addEventListener("mousemove", handleMouseMove, { passive: true });
   document.addEventListener("keydown", handleKeyDown);
   document.addEventListener("keyup", handleKeyUp);
 
@@ -558,6 +747,8 @@ function init() {
     if (message.action === "openQueryPanel") {
       openQueryPanel();
     }
+    // Ensure sendResponse is called if needed
+    return false;
   });
 }
 
