@@ -100,8 +100,8 @@
   min-height: 100px;
   overflow: hidden;
   resize: both;
-  max-width: 800px;
-  max-height: 600px;
+  max-width: 95vw;
+  max-height: 80vh;
   opacity: 0;
   transform: translateY(-10px);
   transition: opacity 0.3s ease, transform 0.3s ease;
@@ -161,6 +161,10 @@
   border-radius: 4px;
   font-family: var(--font-mono);
   font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 36px;
+  max-height: 200px;
   transition: border-color var(--animation-speed) ease,
     box-shadow var(--animation-speed) ease;
 }

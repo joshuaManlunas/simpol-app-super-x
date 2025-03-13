@@ -19,6 +19,7 @@ A Chrome extension that helps developers and testers generate and test XPath que
 - **Performance Optimized**: Efficiently handles large pages and complex DOM structures
 - **Accessibility Support**: Keyboard navigable with proper ARIA attributes
 - **Visual Feedback**: Animated highlights and copy confirmations
+- **Smart XPath Generation**: Ignores extension-added classes when generating optimized queries
 
 ## Installation
 
@@ -60,7 +61,7 @@ A Chrome extension that helps developers and testers generate and test XPath que
 5. Matching elements will be highlighted in blue as you type
 6. The panel will show the number of matching elements
 7. You can drag the panel by its header to reposition it
-8. Resize the panel by dragging the bottom-right corner
+8. Resize the panel by dragging the bottom-right corner (expands up to full browser width)
 9. Click the "×" button to close the panel
 
 ![Manual Query Mode](screenshots/manual-mode.png)
@@ -76,6 +77,7 @@ The extension includes several performance optimizations:
 - **CSS Transitions**: Hardware-accelerated animations for smooth visual feedback
 - **State Management**: Centralized state management to reduce memory usage
 - **Error Handling**: Comprehensive error handling to prevent crashes
+- **Smart Class Handling**: Extension-added classes are automatically filtered out from XPath generation
 
 ## Accessibility Features
 
@@ -120,6 +122,7 @@ The extension uses:
 - **Error Handling**: Graceful error recovery
 - **Performance Monitoring**: Limits to prevent slowdowns in large documents
 - **State Management**: Central state object to avoid global variables
+- **Class Exclusion**: Intelligently excludes extension-added classes from XPath queries
 
 ## Browser Compatibility
 

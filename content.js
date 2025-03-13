@@ -238,9 +238,17 @@ function getOptimizedXPath(element) {
     return `//*[@id="${element.id}"]`;
   }
 
-  // If element has a unique class, use it
+  // Define classes added by the extension that should be ignored
+  const extensionClasses = ["xpath-highlight", "xpath-query-match"];
+
+  // If element has a unique class, use it (excluding extension-added classes)
   if (element.className && typeof element.className === "string") {
-    const classes = element.className.split(/\s+/).filter(Boolean);
+    const classes = element.className
+      .split(/\s+/)
+      .filter(Boolean)
+      .filter((className) => !extensionClasses.includes(className));
+
+    // Try each individual class that is not from our extension
     for (const className of classes) {
       const sameClassElements = document.getElementsByClassName(className);
       if (sameClassElements.length === 1) {
@@ -249,15 +257,21 @@ function getOptimizedXPath(element) {
     }
   }
 
-  // Try with combined classes if there are multiple
+  // Try with combined classes if there are multiple (excluding extension-added classes)
   if (element.className && typeof element.className === "string") {
-    const className = element.className.trim();
-    if (className) {
+    // Remove extension classes before creating the combined class query
+    const filteredClassNames = element.className
+      .split(/\s+/)
+      .filter(Boolean)
+      .filter((className) => !extensionClasses.includes(className))
+      .join(" ");
+
+    if (filteredClassNames) {
       const sameClassElements = document.querySelectorAll(
-        `.${CSS.escape(className)}`
+        `.${CSS.escape(filteredClassNames)}`
       );
       if (sameClassElements.length === 1) {
-        return `//*[@class="${className}"]`;
+        return `//*[@class="${filteredClassNames}"]`;
       }
     }
   }
