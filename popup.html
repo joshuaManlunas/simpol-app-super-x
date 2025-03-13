@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Super-X XPath Query Generator</title>
+    <style>
+      body {
+        width: 300px;
+        padding: 15px;
+        font-family: Arial, sans-serif;
+      }
+      h1 {
+        font-size: 18px;
+        margin-top: 0;
+      }
+      p {
+        font-size: 14px;
+        line-height: 1.4;
+      }
+      .key {
+        display: inline-block;
+        background-color: #f0f0f0;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        padding: 2px 6px;
+        font-family: "Courier New", monospace;
+      }
+
+      .action-button {
+        background-color: #4285f4;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      .action-button:hover {
+        background-color: #3367d6;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Super-X XPath Query Generator</h1>
+    <p>
+      Hold the <span class="key">Shift</span> key and hover over elements to see
+      their XPath queries.
+    </p>
+    <p>
+      The overlay panel will show both a full XPath and an optimized version
+      when available.
+    </p>
+    <p>Click the "Copy" button to copy the XPath to your clipboard.</p>
+    <hr />
+    <button id="openQueryPanel" class="action-button">
+      Open XPath Query Panel
+    </button>
+    <script src="popup.js"></script>
+  </body>
+</html>
