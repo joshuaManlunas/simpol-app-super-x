@@ -20,6 +20,7 @@ A Chrome extension that helps developers and testers generate and test XPath que
 - **Accessibility Support**: Keyboard navigable with proper ARIA attributes
 - **Visual Feedback**: Animated highlights and copy confirmations
 - **Smart XPath Generation**: Ignores extension-added classes when generating optimized queries
+- **Modern UI**: Styled with a clean, responsive CSS interface
 
 ## Installation
 
@@ -36,6 +37,38 @@ A Chrome extension that helps developers and testers generate and test XPath que
 3. Enable "Developer mode" using the toggle in the top-right corner
 4. Click "Load unpacked" and select the folder containing the extension files
 5. The extension should now appear in your extensions list and toolbar
+
+## Development
+
+### Setup
+
+1. Clone the repository
+2. Run the build script to install dependencies
+   ```
+   ./build.sh
+   ```
+
+### CSS Styling
+
+This extension uses standard CSS for styling the UI:
+
+1. **CSS Structure**:
+
+   - The extension uses standard CSS with CSS variables for theming
+   - Styles are organized in a modular way in the `styles.css` file
+   - All styling is done with semantic class names for maintainability
+
+2. **Custom Styling**:
+   - Custom CSS variables are defined in the `:root` selector for easy theming
+   - Modern CSS features like flexbox and grid are used for layouts
+   - Animations and transitions provide a polished user experience
+
+### Browser Extension Development
+
+1. Open Chrome and navigate to `chrome://extensions/`
+2. Enable "Developer mode" in the top-right corner
+3. Click "Load unpacked" and select the extension directory
+4. After making changes, click the refresh icon on the extension card
 
 ## Usage
 

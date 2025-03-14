@@ -550,11 +550,44 @@ function handleXPathInput(event) {
 }
 
 /**
+ * Ensures XPath highlight styles are in the document
+ */
+function ensureHighlightStyles() {
+  if (!document.getElementById("xpath-highlight-styles")) {
+    const styleEl = document.createElement("style");
+    styleEl.id = "xpath-highlight-styles";
+    styleEl.textContent = `
+      .xpath-query-match {
+        outline: 2px solid #4285f4 !important;
+        outline-offset: 2px !important;
+        background-color: rgba(66, 133, 244, 0.2) !important;
+        animation: xpath-pulse 2s infinite !important;
+      }
+
+      @keyframes xpath-pulse {
+        0% { outline-offset: 2px; }
+        50% { outline-offset: 4px; }
+        100% { outline-offset: 2px; }
+      }
+
+      .xpath-highlight {
+        outline: 2px solid #ff5722 !important;
+        outline-offset: 2px !important;
+        background-color: rgba(255, 87, 34, 0.1) !important;
+        transition: outline-color 0.15s ease !important;
+      }
+    `;
+    document.head.appendChild(styleEl);
+  }
+}
+
+/**
  * Evaluates XPath and highlights matching elements
  * @param {string} query - XPath query
  */
 function evaluateXPath(query) {
   clearHighlightedElements();
+  ensureHighlightStyles(); // Make sure styles are injected
 
   try {
     const result = document.evaluate(
@@ -654,6 +687,8 @@ function openQueryPanel() {
  * @param {Element|null} element - Element to highlight
  */
 function highlightElement(element) {
+  ensureHighlightStyles(); // Make sure styles are injected
+
   if (state.lastHighlightedElement) {
     state.lastHighlightedElement.classList.remove("xpath-highlight");
   }
@@ -737,24 +772,27 @@ function handleKeyUp(event) {
  * Initialize the extension
  */
 function init() {
-  // Use passive event listeners for better performance
+  // Add state object to store extension state
+  window.xpathGeneratorState = state;
+
+  // Ensure highlight styles are injected right at the beginning
+  ensureHighlightStyles();
+
+  // We use passive: true for better performance when possible
   document.addEventListener("mousemove", handleMouseMove, { passive: true });
   document.addEventListener("keydown", handleKeyDown);
   document.addEventListener("keyup", handleKeyUp);
 
-  // Listen for messages from the popup
+  // Add message listener for popup communications
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "openQueryPanel") {
       openQueryPanel();
+      sendResponse({ success: true });
     }
-    // Ensure sendResponse is called if needed
-    return false;
   });
+
+  console.log("Super-X XPath Query Generator initialized 🚀");
 }
 
-// Start the extension when the page is fully loaded
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
-} else {
-  init();
-}
+// Initialize the extension
+init();

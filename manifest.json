@@ -11,7 +11,7 @@
     {
       "matches": ["<all_urls>"],
       "js": ["content.js"],
-      "css": ["styles.css"],
+      "css": ["styles.css", "highlight-styles.css"],
       "run_at": "document_end"
     }
   ],
@@ -30,7 +30,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["images/*"],
+      "resources": ["images/*", "styles.css"],
       "matches": ["<all_urls>"]
     }
   ],
