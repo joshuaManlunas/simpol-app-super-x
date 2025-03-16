@@ -1,0 +1,15 @@
+{
+  "name": "super-x",
+  "version": "1.0.0",
+  "description": "A Chrome extension that helps developers and testers generate and test XPath queries for web elements. The extension provides two modes of operation: a hover mode that shows XPath queries for elements under the cursor, and a manual query mode that highlights elements matching a custom XPath query.",
+  "main": "content.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "tailwindcss": "^4.0.0"
+  }
+}
