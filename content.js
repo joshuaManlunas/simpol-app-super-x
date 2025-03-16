@@ -17,6 +17,7 @@
  * @property {number} queryResultCount - Number of elements matching the current query
  * @property {HTMLElement[]} highlightedElements - Elements highlighted by manual XPath query
  * @property {number|null} copyFeedbackTimeout - Timeout ID for copy feedback message
+ * @property {boolean} isEnabled - Whether the extension is currently enabled
  */
 
 // State management
@@ -28,6 +29,7 @@ const state = {
   queryPanel: null,
   highlightedElements: [],
   queryResultCount: 0,
+  isEnabled: true, // Default to enabled
   currentXPath: "",
   currentOptimizedXPath: "",
   copyFeedbackTimeout: null,
@@ -391,11 +393,7 @@ function updateOverlayPanel(element) {
  * @returns {HTMLElement} The created query panel
  */
 function createQueryPanel() {
-  if (state.queryPanel) {
-    state.queryPanel.style.display = "block";
-    return state.queryPanel;
-  }
-
+  // Create a new panel regardless of state
   const panel = document.createElement("div");
   panel.id = "xpath-query-panel";
   panel.classList.add("xpath-query-panel");
@@ -449,6 +447,11 @@ function createQueryPanel() {
 
   // Make panel draggable
   makeDraggable(panel, header);
+
+  // Set initial position in the viewport
+  panel.style.top = "100px";
+  panel.style.left = "100px";
+  panel.style.display = "block";
 
   document.body.appendChild(panel);
   return panel;
@@ -667,11 +670,22 @@ function clearHighlightedElements() {
  * Opens the query panel
  */
 function openQueryPanel() {
-  if (!state.queryPanel) {
-    state.queryPanel = createQueryPanel();
-  } else {
-    state.queryPanel.style.display = "block";
+  // Skip if extension is disabled
+  if (!state.isEnabled) return;
+
+  console.log("Opening query panel");
+
+  // Remove any existing panel completely
+  const existingPanel = document.getElementById("xpath-query-panel");
+  if (existingPanel) {
+    existingPanel.remove();
   }
+
+  // Always set to null first to ensure clean state
+  state.queryPanel = null;
+
+  // Create a brand new panel
+  state.queryPanel = createQueryPanel();
 
   // Focus the input field
   setTimeout(() => {
@@ -680,6 +694,8 @@ function openQueryPanel() {
       input.focus();
     }
   }, 100);
+
+  console.log("Query panel opened:", state.queryPanel);
 }
 
 /**
@@ -704,15 +720,15 @@ function highlightElement(element) {
  * @param {MouseEvent} event - Mouse event
  */
 function handleMouseMove(event) {
-  if (!state.isShiftPressed) {
-    if (state.overlayPanel) {
-      state.overlayPanel.style.display = "none";
-    }
-    if (state.lastHighlightedElement) {
-      state.lastHighlightedElement.classList.remove("xpath-highlight");
-      state.lastHighlightedElement = null;
-    }
-    return;
+  // Skip if extension is disabled or shift key isn't pressed
+  if (!state.isEnabled || !state.isShiftPressed) return;
+
+  if (state.overlayPanel) {
+    state.overlayPanel.style.display = "none";
+  }
+  if (state.lastHighlightedElement) {
+    state.lastHighlightedElement.classList.remove("xpath-highlight");
+    state.lastHighlightedElement = null;
   }
 
   // Get the element under the cursor, but ignore our overlay
@@ -733,6 +749,9 @@ function handleMouseMove(event) {
  * @param {KeyboardEvent} event - Keyboard event
  */
 function handleKeyDown(event) {
+  // Skip if extension is disabled
+  if (!state.isEnabled) return;
+
   if (event.key === "Shift") {
     state.isShiftPressed = true;
   }
@@ -778,6 +797,16 @@ function init() {
   // Ensure highlight styles are injected right at the beginning
   ensureHighlightStyles();
 
+  // Load enabled state from storage
+  chrome.storage.sync.get("isEnabled", (result) => {
+    state.isEnabled = result.isEnabled === undefined ? true : result.isEnabled;
+    console.log(
+      `Super-X XPath Query Generator ${
+        state.isEnabled ? "enabled" : "disabled"
+      }`
+    );
+  });
+
   // We use passive: true for better performance when possible
   document.addEventListener("mousemove", handleMouseMove, { passive: true });
   document.addEventListener("keydown", handleKeyDown);
@@ -785,13 +814,67 @@ function init() {
 
   // Add message listener for popup communications
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log("Received message:", message);
+
     if (message.action === "openQueryPanel") {
-      openQueryPanel();
+      try {
+        console.log("Opening XPath query panel");
+        openQueryPanel();
+        sendResponse({ success: true });
+      } catch (error) {
+        console.error("Error opening query panel:", error);
+        sendResponse({ success: false, error: error.message });
+      }
+    } else if (message.action === "toggleExtension") {
+      state.isEnabled = message.isEnabled;
+
+      // Clear any existing highlights when disabling
+      if (!state.isEnabled) {
+        clearHighlights();
+
+        // Close any open panels
+        if (state.overlayPanel) {
+          state.overlayPanel.style.display = "none";
+        }
+
+        // Remove panel completely when disabling
+        const existingPanel = document.getElementById("xpath-query-panel");
+        if (existingPanel) {
+          existingPanel.remove();
+          state.queryPanel = null;
+        }
+      }
+
+      console.log(
+        `Super-X XPath Query Generator ${
+          state.isEnabled ? "enabled" : "disabled"
+        }`
+      );
       sendResponse({ success: true });
     }
+    return true; // Keep the message channel open for async responses
   });
 
   console.log("Super-X XPath Query Generator initialized 🚀");
+}
+
+/**
+ * Clear all highlighted elements
+ */
+function clearHighlights() {
+  // Remove highlights from manual query
+  if (state.highlightedElements.length > 0) {
+    state.highlightedElements.forEach((el) => {
+      el.classList.remove("xpath-query-match");
+    });
+    state.highlightedElements = [];
+  }
+
+  // Remove highlight from current hover element
+  if (state.lastHighlightedElement) {
+    state.lastHighlightedElement.classList.remove("xpath-highlight");
+    state.lastHighlightedElement = null;
+  }
 }
 
 // Initialize the extension

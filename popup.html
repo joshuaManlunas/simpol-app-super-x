@@ -39,6 +39,20 @@
     <!-- Header with gradient background -->
     <header class="header">
       <div class="header-content">
+        <div class="icon-container">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="icon"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </div>
         <h1 class="title">
           Super-X
           <span class="subtitle">XPath Query Generator</span>
@@ -47,6 +61,15 @@
     </header>
 
     <main class="main">
+      <!-- Extension Toggle Switch -->
+      <div class="toggle-container">
+        <div class="toggle-label">Extension Enabled</div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="extensionToggle" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
       <!-- Instruction card -->
       <div class="instruction-card">
         <div class="card-content">

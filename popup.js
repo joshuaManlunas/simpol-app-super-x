@@ -8,6 +8,8 @@
  */
 const openQueryPanel = async () => {
   try {
+    console.log("Opening XPath Query Panel from popup");
+
     // Get the current active tab
     const [activeTab] = await chrome.tabs.query({
       active: true,
@@ -19,11 +21,22 @@ const openQueryPanel = async () => {
       return;
     }
 
-    // Send the message to the content script
-    await chrome.tabs.sendMessage(activeTab.id, { action: "openQueryPanel" });
+    console.log("Sending message to tab:", activeTab.id);
 
-    // Close the popup
-    window.close();
+    // Send the message to the content script
+    const response = await chrome.tabs.sendMessage(activeTab.id, {
+      action: "openQueryPanel",
+      timestamp: Date.now(), // Add timestamp to prevent caching of the message
+    });
+
+    console.log("Response from content script:", response);
+
+    // Only close popup if successful
+    if (response && response.success) {
+      window.close();
+    } else {
+      throw new Error("Content script did not return success");
+    }
   } catch (error) {
     console.error("Error opening query panel:", error);
 
@@ -38,13 +51,84 @@ const openQueryPanel = async () => {
 };
 
 /**
+ * Toggles the extension's enabled state
+ * @param {boolean} isEnabled - Whether the extension should be enabled
+ */
+const toggleExtension = async (isEnabled) => {
+  try {
+    // Save state to Chrome storage
+    await chrome.storage.sync.set({ isEnabled });
+
+    // Get the current active tab
+    const [activeTab] = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+
+    if (!activeTab?.id) {
+      console.error("No active tab found");
+      return;
+    }
+
+    // Notify content script about state change
+    await chrome.tabs.sendMessage(activeTab.id, {
+      action: "toggleExtension",
+      isEnabled,
+    });
+
+    // Update UI based on state
+    const openPanelButton = document.getElementById("openQueryPanel");
+    if (openPanelButton) {
+      openPanelButton.disabled = !isEnabled;
+      openPanelButton.classList.toggle("disabled", !isEnabled);
+    }
+
+    // Update instruction card and features section opacity
+    const instructionCard = document.querySelector(".instruction-card");
+    const featuresSection = document.querySelector(".features-grid").parentNode;
+
+    if (instructionCard && featuresSection) {
+      instructionCard.style.opacity = isEnabled ? "1" : "0.5";
+      featuresSection.style.opacity = isEnabled ? "1" : "0.5";
+    }
+  } catch (error) {
+    console.error("Error toggling extension:", error);
+  }
+};
+
+/**
  * Initialize popup event listeners
  */
-const initPopup = () => {
+const initPopup = async () => {
   const openPanelButton = document.getElementById("openQueryPanel");
+  const extensionToggle = document.getElementById("extensionToggle");
 
   if (openPanelButton) {
     openPanelButton.addEventListener("click", openQueryPanel);
+  }
+
+  if (extensionToggle) {
+    // Load saved state from storage
+    try {
+      const result = await chrome.storage.sync.get("isEnabled");
+      const isEnabled =
+        result.isEnabled === undefined ? true : result.isEnabled;
+
+      // Update toggle to match saved state
+      extensionToggle.checked = isEnabled;
+
+      // Apply initial state to UI
+      toggleExtension(isEnabled);
+
+      // Add change listener
+      extensionToggle.addEventListener("change", (e) => {
+        toggleExtension(e.target.checked);
+      });
+    } catch (error) {
+      console.error("Error loading extension state:", error);
+      // Default to enabled if there's an error
+      extensionToggle.checked = true;
+    }
   }
 };
 
